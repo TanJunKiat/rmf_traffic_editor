@@ -2501,10 +2501,20 @@ void Editor::mouse_add_polygon(
 
       const Level::NearestItem ni = level->nearest_items(p.x(), p.y());
       clicked_idx = ni.vertex_dist < 10.0 ? ni.vertex_idx : -1;
-      if (clicked_idx < 0)
-        return;// nothing to do. click wasn't on a vertex.
 
       Vertex* v = &building.levels[level_idx].vertices[clicked_idx];
+      if (clicked_idx < 0)
+      {
+        undo_stack.push(
+          new AddVertexCommand(
+            &building,
+            level_idx,
+            p.x(),
+            p.y()));
+        v = &building.levels[level_idx].vertices.back();
+        clicked_idx = building.levels[level_idx].vertices.size() - 1;
+      }
+
       v->selected = true;  // todo: colorize it?
 
       if (mouse_motion_polygon == nullptr)
@@ -2527,6 +2537,7 @@ void Editor::mouse_add_polygon(
           mouse_motion_polygon_vertices.end(),
           clicked_idx) == mouse_motion_polygon_vertices.end())
         mouse_motion_polygon_vertices.push_back(clicked_idx);
+
     }
     else if (e->buttons() & Qt::RightButton)
     {
